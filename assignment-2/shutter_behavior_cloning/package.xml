@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>shutter_behavior_cloning</name>
+  <version>0.0.1</version>
+  <description>The shutter_behavior_cloning package</description>
+
+  <maintainer email="marynel.vazquez@yale.edu">Marynel Vazquez</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+
+  <!-- collect_data.launch.py: simulation (shutter_lookat/start_sim.launch.py) and MoveIt Servo -->
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>shutter_lookat</exec_depend>
+  <exec_depend>shutter_bringup</exec_depend>
+  <exec_depend>shutter_mujoco_sim</exec_depend>
+  <exec_depend>shutter_servo</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <!-- wait_for_controllers.py -->
+  <exec_depend>controller_manager_msgs</exec_depend>
+  <!-- expert_opt.py -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-scipy</exec_depend>
+  <exec_depend>urdfdom_py</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <!-- test_policy.py -->
+  <test_depend>ament_cmake_ros</test_depend>
+  <test_depend>launch_testing</test_depend>
+  <test_depend>launch_testing_ros</test_depend>
+  <test_depend>launch_testing_ament_cmake</test_depend>
+  <!-- test_download_model.py -->
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
