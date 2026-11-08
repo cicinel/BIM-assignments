@@ -22,7 +22,9 @@ def KF_predict_step(mu, Sigma, A, R):
     :param R: covariance for the noise of the transition model
     :return: predicted mean and covariance for the state based on the transition model A and the process noise R.
     """
-    # TODO. Complete. Set the predicted_mu and predicted_Sigma variables according to the Kalman Filter's prediction step.
+ 
+    predicted_mu = A @ mu
+    predicted_Sigma = A @ Sigma @ A.T + R
     return predicted_mu, predicted_Sigma
 
 
@@ -36,7 +38,12 @@ def KF_measurement_update_step(pred_mu, pred_Sigma, z, C, Q):
     :param Q: covariance for the noise of the observation or measurement model.
     :return: corrected mean and covariance for the state based on the observation z, the linear model C, and the measurement cov. Q.
     """
-    # TODO. Complete. Set the corrected_mu and corrected_Sigma variables according to the Kalman Filter's measurement update step.
+  
+    S = C @ pred_Sigma @ C.T + Q
+    K = pred_Sigma @ C.T @ np.linalg.inv(S)
+    corrected_mu = pred_mu + K @ (z - C @ pred_mu)
+    I = np.eye(pred_Sigma.shape[0])
+    corrected_Sigma = (I - K @ C) @ pred_Sigma
     return corrected_mu, corrected_Sigma
 
 
@@ -264,37 +271,55 @@ class KalmanFilterNode(Node):
         Method that assembles the A matrix for the KF_predict_step
         :param delta_t: elapsed time (in seconds) since last prediction
         """
-        # TODO. Remove the "pass" line below and set self.A based on the elapsed time delta_t
-        pass
+      
+        dt = delta_t
+        I = np.eye(3)
+        O = np.zeros((3, 3))
+        self.A = np.block([
+            [I, dt * I, 0.5 * dt * dt * I],
+            [O, I,      dt * I],
+            [O, O,      I],
+        ])
 
     def assemble_C_matrix(self):
         """
         Method that assembles the C matrix for the KF_measurement_step
         """
-        # TODO. Remove the "pass" line below and set self.C such that self.C x self.mu returns the expected measurement
-        pass
+      
+        I = np.eye(3)
+        O = np.zeros((3, 3))
+        self.C = np.hstack([I, O, O])
 
     def initialize_process_covariance(self):
         """
         Method that sets the process covariance R for the filter node
         """
-        # TODO. Remove the "pass" line below and set self.R
-        pass
+   
+        p = 1e-6 
+        v = 1e-4 
+        a = 1e-2  
+        self.R = np.diag([p, p, p, v, v, v, a, a, a])
 
     def initialize_measurement_covariance(self):
         """
         Method that sets the process covariance Q for the filter node
         """
-        # TODO. Remove the "pass" line below and set self.Q
-        pass
+     
+        self.Q = np.diag([0.05**2, 0.05**2, 0.03**2])
 
     def initialize_mu_and_sigma(self, obs_msg):
         """
         Method that initializes the state (sets self.mu and self.Sigma).
         :param obs_msg Observation message with the latest measured position for the target
         """
-        # TODO. Remove the "pass" line below and set self.mu and self.Sigma to their initial values here.
-        pass 
+    
+        z = self.assemble_observation_vector(obs_msg)
+        self.mu = np.zeros((9, 1))
+        self.mu[0:3] = z
+        p = 0.01  
+        v = 1.0   
+        a = 1.0  
+        self.Sigma = np.diag([p, p, p, v, v, v, a, a, a])
 
     def assemble_observation_vector(self, obs_msg):
         """
@@ -302,7 +327,9 @@ class KalmanFilterNode(Node):
         :param obs_msg: latest Target message that has been received by the node
         :return: numpy array representing the observation vector (with the 3D position of the target)
         """
-        # TODO. Complete. Build the numpy array z such that it corresponds to the observed target location.
+     
+        q = obs_msg.pose.pose.position
+        z = np.array([[q.x], [q.y], [q.z]])
         return z
 
 

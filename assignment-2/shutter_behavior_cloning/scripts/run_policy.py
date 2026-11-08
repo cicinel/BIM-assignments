@@ -14,6 +14,11 @@ import sys
 import os
 
 from servo_joint_client import ServoJointClient
+from learn_policy import PolicyModel, make_features, normalize
+
+# Joint limits from Shutter's URDF 
+JOINT_1_LIMIT = 2.617   #  150 degrees
+JOINT_3_LIMIT = 1.571   #  90 degrees
 
 
 class RunPolicyNode(Node):
@@ -34,10 +39,19 @@ class RunPolicyNode(Node):
         self.model_file = self.get_parameter("model").value              # required path to model file
         self.normp_file = self.get_parameter("norm_params").value        # optional path to normalization parameters (empty str means no norm params)
 
-        # TODO - complete the line below to load up your model and create any necessary class instance variables.
-        # Load the model's weights with torch.load(self.model_file, weights_only=True), and the normalization
-        # parameters (if any) with json.load().
-        self.model = ...
+       
+        self.model = PolicyModel()
+        self.model.load_state_dict(torch.load(self.model_file, weights_only=True, map_location='cpu'))
+        self.model.eval()
+
+      
+        self.mean = None
+        self.std = None
+        if self.normp_file:
+            with open(self.normp_file, 'r') as fid:
+                norm_params = json.load(fid)
+            self.mean = np.array(norm_params['mean'])
+            self.std = np.array(norm_params['std'])
 
         # joint values
         self.current_pose = None  # [joint_1, joint_2, joint_3, joint_4]
@@ -74,9 +88,26 @@ class RunPolicyNode(Node):
         :return: tuple with new joint positions for joint1 and joint3, or None if the computation failed
         """
 
-        # TODO - remove None return statement and complete function with the logic that runs your model to compute new
-        # joint positions 1 & 3 for the robot...
-        return None
+      
+        p = msg.pose.position
+        features = make_features([[p.x, p.y, p.z, joint1, joint3]])
+        if self.mean is not None:
+            features = normalize(features, self.mean, self.std)
+
+       
+        with torch.no_grad():
+            output = self.model(torch.as_tensor(features, dtype=torch.float32)).numpy()[0]
+        new_j1, new_j3 = output[0], output[1]
+
+        if not np.isfinite(new_j1) or not np.isfinite(new_j3):
+            self.get_logger().warn("The model predicted non-finite joint positions ({} {})".format(new_j1, new_j3))
+            return None
+
+       
+        new_j1 = np.clip(new_j1, -JOINT_1_LIMIT, JOINT_1_LIMIT)
+        new_j3 = np.clip(new_j3, -JOINT_3_LIMIT, JOINT_3_LIMIT)
+
+        return float(new_j1), float(new_j3)
 
     def target_callback(self, msg):
         """

@@ -15,8 +15,8 @@ import gdown
 #   $ import train_utils
 #   $ train_utils.download_model_files(quiet=False)
 # Then, you should have a copy of your model named my_torch_model in your local disk.
-MODEL_URL = 'https://drive.google.com/uc?id=<file_id>'
-NORM_PARAMS_URL = 'https://drive.google.com/uc?id=<file_id>'
+MODEL_URL = 'https://drive.google.com/uc?id=10BM2iQ1LH3JntmFkfatt2ToUw6gJn_vB'
+NORM_PARAMS_URL = 'https://drive.google.com/uc?id=1FTjzn70_U-0rcBvhe-lAgDHcaUbjtZAM'
 
 
 def load_data(input_file):
